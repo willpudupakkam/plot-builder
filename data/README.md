@@ -1,7 +1,19 @@
-# Data Folder
+# Data folder
 
-Put your CSV files in this folder.
+`sample.csv` is a small synthetic dataset included so Plot Builder works immediately after cloning.
 
-The app reads every `*.csv` file here and uses the CSV column names as available plot axes, colors, histogram columns, and filter fields.
+Add personal CSV files directly to this folder or group them into one-level workspace directories, for example:
 
-`sample.csv` is included so the app works immediately after cloning. You can delete it when you add your own data.
+```text
+data/
+├── sample.csv
+├── observation-a/
+│   └── catalogue.csv
+└── observation-b/
+    ├── catalogue-1.csv
+    └── catalogue-2.csv
+```
+
+Every directory containing CSV files appears as a workspace in the app. CSV column names become available as axes, colors, histogram fields, derived-column inputs, and filters.
+
+All CSV files except `sample.csv` are ignored by Git. Before deliberately publishing another dataset, confirm that you have permission to redistribute it and document its source, license, processing, and any privacy considerations.

@@ -1,69 +1,114 @@
 # Plot Builder
 
-A general-purpose Streamlit app for plotting CSV files.
+Plot Builder is a local Streamlit app for exploring and plotting CSV data without writing plotting code.
 
 ## Features
 
-- Reads CSV files from `data/`
-- Plot one CSV file or all CSV files together
-- Uses CSV column names as available axes and colors
-- Create derived numeric columns with a small equation editor
-- 2D and 3D scatter plots
-- Histograms
-- Plot styling controls for plot background, point colors, histogram colors, split colors, numeric color palettes, and split-histogram draw order
-- Custom filters:
-  - interval filter `[a, b]`
-  - equals one value
-  - not equals one value
-- Interval endpoints can be blank, `inf`, `infinity`, `-inf`, or `-infinity`
-- Download filtered data as CSV
-- Download plots as standalone HTML
-- Saves derived quantities and filters locally between app restarts, separated by workspace name
+- Load one CSV, combine all CSVs in a workspace, or plot them separately
+- Build 2D and 3D scatter plots and histograms
+- Create global or per-catalogue derived numeric columns
+- Filter with intervals, equality, and inequality conditions
+- Color by numeric or categorical columns and control trace order
+- Add reference lines, point labels, and highlighted points
+- Save plots locally as HTML or PNG
+- Download filtered data and standalone Plotly HTML
+- Keep derived columns, filters, and styles in per-workspace local state
+- Optionally augment loaded catalogues with a local Python extension
 
-## Quick Start
+## Requirements
+
+- Python 3.10 or newer
+- A modern web browser
+- Chrome or Chromium only if you want PNG export; HTML export needs no external browser
+
+## Quick start
 
 ```bash
+git clone https://github.com/willpudupakkam/plot-builder.git
+cd plot-builder
 python -m venv .venv
 source .venv/bin/activate
-pip install -r requirements.txt
+python -m pip install --upgrade pip
+python -m pip install -r requirements.txt
 streamlit run app.py
 ```
 
-Then open the local URL shown by Streamlit.
+On Windows PowerShell, activate the environment with:
 
-## Add Your Data
+```powershell
+.venv\Scripts\Activate.ps1
+```
 
-Put CSV files in:
+The repository includes a small synthetic dataset, so the app works immediately after cloning.
+
+## Add data
+
+Place CSV files directly in `data/` or organize them into one-level workspace folders:
 
 ```text
 data/
+├── sample.csv
+├── experiment-a/
+│   ├── run-01.csv
+│   └── run-02.csv
+└── experiment-b/
+    └── run-01.csv
 ```
 
-The app automatically finds every `*.csv` file in that folder.
+Each folder containing CSV files appears as a separate workspace. Real CSV files are ignored by Git by default; only the synthetic `data/sample.csv` is tracked.
 
-## Derived Columns
+When multiple files are loaded together, Plot Builder adds a `source_file` column that can be used for colors, histogram splits, and filters.
 
-Open **Derived Columns** in the sidebar, choose how many new columns to make, and write formulas using the clickable column buttons. Each button is labeled with the exact CSV column name and inserts that same column name using pandas backtick syntax, so columns like `M_star(65)` or `x position [kpc/h]` can still be evaluated correctly.
+## Derived columns
 
-Column and function buttons only insert text into the formula box. The derived column is not evaluated until you press **Apply Formula**.
+Open **Derived Columns** in the sidebar, add a column, and enter an expression. Column buttons insert exact names using pandas backtick syntax, allowing names such as `M_star(65)` or `x position [kpc/h]`.
 
 Examples:
 
 ```text
 sqrt(`x`**2 + `y`**2)
-log10(`M_star(65)`)
-where(`M_gas(45)` > 0, `M_gas(45)` / `M_star(65)`, 0)
+log10(`size`)
+where(`temperature` > 20, `size` / 2, 0)
 ```
 
 Supported operators include `+`, `-`, `*`, `/`, `**`, and comparisons. Supported functions include `sqrt`, `log`, `log10`, `abs`, `sin`, `cos`, `tan`, `exp`, `where`, `minimum`, `maximum`, and `clip`.
 
-## Notes
+## Optional catalogue extensions
 
-- Scatter plot axes require numeric columns.
-- Histogram columns require numeric columns.
-- Derived columns are evaluated as numeric columns and can be used as axes, colors, histogram inputs, or filters.
-- Derived quantities and filters are saved in `.plot_builder_state/<workspace>.json`, which is ignored by Git. The default workspace is `default`; use a different workspace name when multiple people share the same deployed app.
-- Color can use numeric or categorical columns.
-- Numeric color columns use a selectable color palette; categorical colors and histogram splits can be colored independently.
-- Split histograms can choose which split value is drawn on top.
-- When plotting all CSV files together, the app adds a `source_file` column so rows can be colored, split, or filtered by file.
+At load time, the app looks for an untracked file named `plot_builder_features.py` in the repository root. If it contains a callable named `augment_catalogue`, the app calls it for every loaded CSV:
+
+```python
+def augment_catalogue(data: pandas.DataFrame, path: pathlib.Path) -> pandas.DataFrame:
+    ...
+```
+
+An astronomy-specific example is provided in [`examples/astro_features.py`](examples/astro_features.py). Enable it locally with:
+
+```bash
+cp examples/astro_features.py plot_builder_features.py
+```
+
+The destination is ignored by Git so that local or dataset-specific logic is not accidentally published. See [`examples/README.md`](examples/README.md) for its expected catalogue columns and generated fields.
+
+## PNG export
+
+Kaleido is installed with the project dependencies. It needs Chrome or Chromium to render PNG files. If no compatible browser is installed, run:
+
+```bash
+plotly_get_chrome
+```
+
+Downloaded browsers and saved plots remain local and are ignored by Git. HTML saving and downloading continue to work without Chrome.
+
+## Local files and privacy
+
+Plot Builder writes settings to `.plot_builder_state/` and saved files to `saved_plots/`. These paths, local extensions, browser binaries, secrets, and user CSV data are ignored by Git.
+
+Before sharing an exported HTML plot, remember that Plotly HTML generally contains the plotted values.
+
+## Development checks
+
+```bash
+python -m py_compile app.py examples/astro_features.py
+python -m unittest discover -s tests
+```

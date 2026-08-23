@@ -1,4 +1,7 @@
-numpy
-pandas
-plotly
-streamlit
+numpy>=2.0,<3
+pandas>=2.2,<3
+plotly>=6.0,<7
+streamlit>=1.50,<2
+
+# Required only for PNG export; HTML export works without a local browser.
+kaleido>=1.0,<2

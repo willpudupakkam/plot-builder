@@ -1,11 +1,37 @@
+# Operating-system and editor files
 .DS_Store
+.idea/
+.vscode/
+*.swp
+
+# Python environments, caches, and test output
 .venv/
+venv/
 __pycache__/
 *.py[cod]
 .pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+
+# Local configuration and secrets
+.env
+.env.*
+!.env.example
 .streamlit/secrets.toml
+
+# Plot Builder local state and optional private extension
 .plot_builder_state/
 .plot_builder_state.json
-data/*.csv
-data/private/
+/plot_builder_features.py
+
+# Downloaded browser binaries and generated output
+.choreo_chrome/
+saved_plots/
 exports/
+
+# User-provided data. Keep only the synthetic public sample.
+data/**/*.csv
+!data/sample.csv
+data/private/
